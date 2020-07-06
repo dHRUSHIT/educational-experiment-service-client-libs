@@ -23,3 +23,44 @@ export default async function log(
     throw new Error(error);
   }
 }
+
+/**
+ * 
+ * @param url URL of the host to send the analytics to
+ * @param userId id of the user
+ * @param token additional token to add to the header
+ * @param value data to be sent to the server
+ */
+export function sendAnalytics(
+  url: string,
+  userId: string,
+  token: string,
+  value: ILogInput[]
+): void {
+  const data = {
+    userId,
+    value
+  };
+
+  let headers: any = {
+    'Content-Type': 'application/json'
+  }
+
+  if (!!token) {
+    headers = {
+      ...headers,
+      'Authorization': `Bearer ${token}`
+    }
+  }
+
+  const blob = new Blob([JSON.stringify(data)], headers);
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(url, blob);
+  } else {
+    console.error('navigator.sendBeacon not supported');
+    // handle with xhr fallback
+    const xhr = new XMLHttpRequest();
+    xhr.open('post', url, false);
+    xhr.send(blob);
+  }
+}
